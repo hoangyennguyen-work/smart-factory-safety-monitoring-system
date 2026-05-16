@@ -1,0 +1,1 @@
+# smart-factory-safety-monitoring
