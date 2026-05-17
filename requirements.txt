@@ -1,1 +1,6 @@
-
+jupyter
+ipykernel
+pandas
+matplotlib
+seaborn
+Pillow
