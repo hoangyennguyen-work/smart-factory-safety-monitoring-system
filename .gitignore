@@ -221,5 +221,25 @@ __marimo__/
 data/
 reports/
 
-#Agent
+# Agent
 AGENTS.md
+
+# Image
+*.jpg
+*.png
+
+# Models and Weights
+*.pt
+*.onnx
+*.weights
+
+# YOLO training runs and logs
+runs/
+wandb/
+
+# Generated results
+*.csv
+*results.csv
+
+# VS Code settings
+.vscode/

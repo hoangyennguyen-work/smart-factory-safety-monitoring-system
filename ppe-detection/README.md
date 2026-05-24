@@ -12,13 +12,20 @@ This folder contains the **EDA and preprocessing pipeline** for the Smart Factor
 *   `reports/` — Generated summaries, plots, validation logs, and distributions.
 
 ## 3. Environment Setup
-To ensure reproducibility, please set up a clean Python virtual environment before running the notebooks:
+To ensure reproducibility and high-performance processing, please set up a clean Anaconda environment using the project's root `environment.yml`:
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+# Create the environment from root configuration
+conda env create -f ../environment.yml
+
+# Activate the environment
+conda activate smart-factory-safety
+
+# Register the Jupyter kernel
+python -m ipykernel install --user --name=smart-factory-safety --display-name "Python (smart-factory-safety)"
 ```
+
+For a comprehensive walkthrough and alternative setup options, please refer to the main [ANACONDA_SETUP_GUIDE.md](../ANACONDA_SETUP_GUIDE.md).
 
 ## 4. How to Run the Notebooks
 If you need to regenerate the processed dataset or reports from scratch, follow this exact order:

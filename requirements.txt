@@ -4,3 +4,6 @@ pandas
 matplotlib
 seaborn
 Pillow
+opencv-python
+albumentations
+ultralytics
