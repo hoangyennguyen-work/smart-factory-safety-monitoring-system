@@ -41,3 +41,21 @@ Notebook 05 also writes one Ultralytics dataset YAML file per experiment:
 
 Reports under `reports/experiments/` document copied files, split summaries,
 class distributions, and integrity warnings.
+
+## Notebook 07 Ablation Study
+
+Notebook 07 runs the ablation study only after Notebook 06 has selected the
+best lightweight architecture. The selected architecture is fixed across all
+four experiments so the comparison isolates the training data and augmentation
+strategy rather than model capacity.
+
+- `exp_A_original_only`: original training data only; online augmentation off.
+- `exp_B_online_aug`: original training data only; online augmentation on.
+- `exp_C_offline_aug`: original plus offline augmented training data; online
+  augmentation off.
+- `exp_D_full_pipeline`: original plus offline augmented training data; online
+  augmentation on.
+
+Validation metrics decide the best ablation configuration. The test split stays
+untouched until final evaluation, so Notebook 07 must not rank experiments with
+test-set results.

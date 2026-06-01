@@ -1,10 +1,17 @@
 epochs: 100
+candidate_epochs: 50
+final_epochs: 100
+ablation_epochs: 100
 imgsz: 640
-batch: 16
+batch: 24
 device: 0
+# Windows/Jupyter-safe default. Increase only after confirming dataloader workers
+# do not leave orphan processes or crash the kernel.
 workers: 8
-patience: 30
+patience: 20
 seed: 42
+amp: true
+latency_max_images: 20
 
 candidate_models:
   - yolov8n.pt
@@ -17,5 +24,6 @@ candidate_models:
 selection_priority:
   - recall
   - map50
-  - latency
+  - map50_95
+  - fps
   - model_size

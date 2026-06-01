@@ -21,5 +21,25 @@ Candidate architectures are compared using the priority order in `configs/traini
 
 1. recall
 2. map50
-3. latency
-4. model_size
+3. map50-95
+4. FPS / latency
+5. model_size
+
+Notebook 06 performs architecture triage before the ablation study. Every
+candidate model is trained on the same `exp_D_full_pipeline` dataset YAML with
+the same training and online augmentation settings. This makes the comparison
+about model architecture rather than dataset composition.
+
+Candidate selection uses validation metrics only. The untouched test split is
+not used for choosing the architecture, tuning augmentation settings, or ranking
+candidate runs. After the best lightweight architecture is selected, Notebook 07
+can run the ablation study on that locked architecture.
+
+Candidate runs are saved under `runs/candidate_models/`, and summary reports are
+saved under `reports/training/`.
+
+On Windows/Jupyter, keep `workers: 0` unless training has been verified from a
+terminal process. PyTorch dataloader workers can survive a kernel crash as
+orphan `--multiprocessing-fork` processes. The training helpers also set
+OpenMP environment variables before loading Ultralytics to avoid the duplicate
+`libomp.dll` / `libiomp5md.dll` runtime crash.
