@@ -43,3 +43,19 @@ terminal process. PyTorch dataloader workers can survive a kernel crash as
 orphan `--multiprocessing-fork` processes. The training helpers also set
 OpenMP environment variables before loading Ultralytics to avoid the duplicate
 `libomp.dll` / `libiomp5md.dll` runtime crash.
+
+## Final Training and Test Evaluation
+
+Notebook 08 performs the final training run after architecture triage and
+ablation decisions are already locked. It uses the selected architecture from
+Notebook 06 and the selected training configuration from Notebook 07 or
+`configs/training_config.yaml`.
+
+This is the first notebook allowed to evaluate on the untouched test split.
+The resulting test metrics are for final reporting only; they should not be
+used to switch architectures, rerun ablations, or tune augmentation settings.
+
+Final runs are saved under `runs/final_model/`, reports under
+`reports/training/`, and deployment exports under `weights/final/`. ONNX export
+is supported by default, while optional formats such as TensorRT should be
+treated as machine-dependent and may fail gracefully.

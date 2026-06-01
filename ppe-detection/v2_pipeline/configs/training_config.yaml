@@ -12,6 +12,10 @@ patience: 20
 seed: 42
 amp: true
 latency_max_images: 20
+selected_experiment: exp_D_full_pipeline
+final_export_formats:
+  - onnx
+final_prediction_conf: 0.25
 
 candidate_models:
   - yolov8n.pt

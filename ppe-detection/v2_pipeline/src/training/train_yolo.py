@@ -238,6 +238,94 @@ def train_ablation_experiments(
     return pd.DataFrame(rows)
 
 
+def train_final_model(
+    selected_model: str,
+    data_yaml: Path,
+    output_dir: Path,
+    run_name: str,
+    train_args: dict[str, Any],
+    overwrite: bool = False,
+) -> dict[str, Any]:
+    """Train one final YOLO model after architecture and config selection.
+
+    The final training step should be called only after candidate triage and
+    ablation choices are locked. Custom keys supported in ``train_args`` are
+    ``dry_run`` and ``selected_experiment``.
+    """
+    data_yaml = Path(data_yaml)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not data_yaml.exists():
+        raise FileNotFoundError(f"Dataset YAML not found: {data_yaml}")
+
+    selected_experiment = str(train_args.get("selected_experiment", ""))
+    base_run_name = run_name or _run_name_for_final(selected_model, selected_experiment)
+    safe_run_name = (
+        base_run_name
+        if overwrite
+        else _unique_run_name(output_dir=output_dir, base_name=base_run_name)
+    )
+    run_dir = output_dir / safe_run_name
+    resolved_data_yaml = _resolve_dataset_yaml_for_ultralytics(data_yaml, output_dir)
+
+    result = {
+        "selected_model": selected_model,
+        "selected_experiment": selected_experiment,
+        "data_yaml": str(data_yaml),
+        "resolved_data_yaml": str(resolved_data_yaml),
+        "run_name": safe_run_name,
+        "run_dir": str(run_dir),
+        "best_weights_path": "",
+        "last_weights_path": "",
+        "training_status": "not_started",
+        "notes": "",
+        "error_message": "",
+    }
+
+    try:
+        if bool(train_args.get("dry_run", False)):
+            run_dir.mkdir(parents=True, exist_ok=True)
+            result.update(
+                {
+                    "training_status": "dry_run",
+                    "notes": "training skipped because dry_run=True",
+                }
+            )
+            return result
+
+        effective_args = dict(train_args)
+        effective_args["overwrite"] = overwrite
+        train_result = _train_one_candidate(
+            model_name=selected_model,
+            data_yaml=resolved_data_yaml,
+            output_dir=output_dir,
+            run_name=safe_run_name,
+            train_args=effective_args,
+        )
+        actual_run_dir = _resolve_run_dir(train_result, fallback=run_dir)
+        metrics = extract_training_metrics(actual_run_dir)
+        result.update(
+            {
+                "training_status": "trained",
+                "run_dir": str(actual_run_dir),
+                "best_weights_path": metrics.get("best_weights_path", ""),
+                "last_weights_path": metrics.get("last_weights_path", ""),
+                "notes": "final training completed",
+                **metrics,
+            }
+        )
+    except Exception as exc:
+        result.update(
+            {
+                "training_status": "failed",
+                "error_message": str(exc),
+                "notes": "final training failed",
+            }
+        )
+    return result
+
+
 def train_yolo_model(
     data_config: Path,
     model_name: str,
@@ -264,7 +352,7 @@ def _train_one_candidate(
 ) -> Any:
     from ultralytics import YOLO
 
-    custom_keys = {"dry_run", "overwrite"}
+    custom_keys = {"dry_run", "overwrite", "selected_experiment"}
     yolo_args = {
         key: value
         for key, value in train_args.items()
@@ -331,6 +419,15 @@ def _run_name_for_ablation(model_name: str, experiment_name: str) -> str:
         experiment_name,
     )
     return f"{model_stem}_{experiment_label}"
+
+
+def _run_name_for_final(model_name: str, experiment_name: str) -> str:
+    model_stem = Path(model_name).stem.replace(".", "_")
+    experiment_label = ABLATION_EXPERIMENT_RUN_NAMES.get(
+        experiment_name,
+        experiment_name or "selected_config",
+    )
+    return f"final_{model_stem}_{experiment_label}"
 
 
 def _build_ablation_train_args(
