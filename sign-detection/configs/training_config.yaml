@@ -1,0 +1,38 @@
+seed: 42
+
+candidate_models:
+  - name: YOLOv8_Nano
+    weights: yolov8n.pt
+  - name: YOLOv9_Tiny
+    weights: yolov9t.pt
+  - name: YOLOv10_Nano
+    weights: yolov10n.pt
+  - name: YOLO11_Nano
+    weights: yolo11n.pt
+  - name: YOLO12_Nano
+    weights: yolo12n.pt
+  - name: YOLO26_Nano
+    weights: yolo26n.pt
+
+imgsz: 640
+batch: 16
+device: 0
+workers: 8
+patience: 30
+
+candidate_epochs: 50
+ablation_epochs: 75
+final_epochs: 100
+
+selected_model: null
+selected_experiment: null
+
+ranking_priority:
+  - recall
+  - map50
+  - map50_95
+  - fps
+  - model_size_mb
+
+export_formats:
+  - onnx

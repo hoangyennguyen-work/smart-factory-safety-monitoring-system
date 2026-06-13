@@ -1,0 +1,53 @@
+offline_augmentation:
+  geometric_ratio: 0.30
+  photometric_ratio: 0.25
+  weather_quality_ratio: 0.20
+  synthetic_placement_ratio: 0.00
+
+geometric:
+  max_rotation_degrees: 25
+  max_perspective: 0.0015
+  max_translate: 0.12
+  min_scale: 0.70
+  max_scale: 1.30
+  allow_bbox_update: true
+
+photometric:
+  enable_ir: true
+  enable_sunlight: true
+  enable_low_light: true
+  enable_shadow: true
+
+weather_quality:
+  enable_blur: true
+  enable_compression: true
+  enable_noise: true
+  enable_rain_dirty_lens: true
+
+online_augmentation_on:
+  hsv_h: 0.015
+  hsv_s: 0.40
+  hsv_v: 0.40
+  degrees: 10
+  translate: 0.10
+  scale: 0.50
+  perspective: 0.0008
+  fliplr: 0.50
+  flipud: 0.00
+  mosaic: 1.00
+  mixup: 0.05
+  close_mosaic: 10
+
+online_augmentation_off:
+  hsv_h: 0.0
+  hsv_s: 0.0
+  hsv_v: 0.0
+  degrees: 0.0
+  translate: 0.0
+  scale: 0.0
+  perspective: 0.0
+  fliplr: 0.0
+  flipud: 0.0
+  mosaic: 0.0
+  mixup: 0.0
+  copy_paste: 0.0

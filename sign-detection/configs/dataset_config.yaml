@@ -1,0 +1,39 @@
+project_name: factory_sign_detection
+
+paths:
+  input_images: data/input/images
+  input_labels: data/input/labels
+
+  splits_original: data/generated/splits_original
+  augmented_train: data/generated/augmented_train
+  experiments: data/generated/experiments
+
+  reports_validation: reports/validation
+  reports_eda: reports/eda
+  reports_augmentation: reports/augmentation
+  reports_experiments: reports/experiments
+  reports_training: reports/training
+  reports_figures: reports/figures
+
+  runs_candidate_models: runs/candidate_models
+  runs_ablation: runs/ablation
+  runs_final_model: runs/final_model
+
+  weights_pretrained: weights/pretrained
+  weights_final: weights/final
+
+image_extensions:
+  - .jpg
+  - .jpeg
+  - .png
+
+split:
+  train: 0.70
+  val: 0.20
+  test: 0.10
+
+random_seed: 42
+
+empty_labels:
+  allow_hard_negatives: true
+  require_negative_manifest: false
