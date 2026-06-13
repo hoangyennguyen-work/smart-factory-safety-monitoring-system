@@ -182,6 +182,29 @@ def rank_candidate_results(results_df: pd.DataFrame) -> pd.DataFrame:
     return ranked
 
 
+def rank_ablation_results(results_df: pd.DataFrame) -> pd.DataFrame:
+    """Rank successful ablation runs by validation metrics only."""
+    if results_df.empty:
+        return results_df.copy()
+    ranked = results_df.copy()
+    successful = ranked["status"].eq("trained") if "status" in ranked.columns else pd.Series(False, index=ranked.index)
+    ranked = ranked.loc[successful].copy()
+    if ranked.empty:
+        ranked["rank"] = pd.Series(dtype="int")
+        return ranked
+
+    for column in ["recall", "map50", "map50_95", "fps", "model_size_mb"]:
+        if column not in ranked.columns:
+            ranked[column] = None
+    ranked = ranked.sort_values(
+        by=["recall", "map50", "map50_95", "fps", "model_size_mb"],
+        ascending=[False, False, False, False, True],
+        na_position="last",
+    ).reset_index(drop=True)
+    ranked.insert(0, "rank", range(1, len(ranked) + 1))
+    return ranked
+
+
 def _resolve_dataset_yaml_for_ultralytics(data_yaml: Path, output_dir: Path) -> Path:
     """Write a runtime YAML with an absolute dataset root when needed."""
     data_yaml = Path(data_yaml).resolve()

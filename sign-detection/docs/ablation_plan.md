@@ -24,3 +24,14 @@ Notebook 04 does not train models and does not apply online augmentation. Experi
 ## Ranking Metrics
 
 Later notebooks should rank ablation runs using validation metrics only. The test set remains untouched for final evaluation.
+
+## Notebook 06 Ablation Training
+
+Notebook 06 uses the selected architecture from Notebook 05 and trains that
+same model across A/B/C/D. It compares training configurations only:
+Experiment B and D enable online augmentation, while A and C use the
+off/minimal augmentation settings.
+
+Validation metrics decide the best training configuration. The test set is not
+used for ablation selection. Notebook 07 will use the selected architecture and
+selected ablation experiment for final training and final test evaluation.

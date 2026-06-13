@@ -28,6 +28,13 @@ MODEL_RUN_NAMES = {
     "yolo26n.pt": "YOLO26_Nano_expD",
 }
 
+ABLATION_RUN_PREFIXES = {
+    "exp_A_original_only": "A_original_only",
+    "exp_B_online_aug": "B_online_aug",
+    "exp_C_offline_aug": "C_offline_aug",
+    "exp_D_full_pipeline": "D_full_pipeline",
+}
+
 
 def train_candidate_models(
     data_yaml: Path,
@@ -125,6 +132,121 @@ def train_candidate_models(
     return pd.DataFrame(rows)
 
 
+def train_ablation_experiments(
+    selected_model: str,
+    experiment_configs: list[dict],
+    output_dir: Path,
+    base_train_args: dict,
+    online_aug_args: dict,
+    offline_aug_args: dict,
+    continue_on_error: bool = True,
+) -> pd.DataFrame:
+    """Train one selected architecture across all ablation configurations.
+
+    Notebook 06 compares training configurations, not architectures. The same
+    selected checkpoint from Notebook 05 is reused for every experiment, while
+    dataset YAML and online augmentation settings change according to A/B/C/D.
+    Failures are recorded row-by-row so one broken run does not hide the rest
+    of the ablation study.
+
+    Args:
+        selected_model: Fixed YOLO checkpoint selected by candidate triage.
+        experiment_configs: Experiment dictionaries with ``experiment``,
+            ``dataset_yaml``, and ``use_online_augmentation`` fields.
+        output_dir: Parent directory for ablation runs.
+        base_train_args: Shared Ultralytics training arguments. Custom keys
+            supported by this helper are ``dry_run`` and ``overwrite``.
+        online_aug_args: Ultralytics augmentation settings for B and D.
+        offline_aug_args: Neutral/minimal augmentation settings for A and C.
+        continue_on_error: Continue after a failed experiment when ``True``.
+
+    Returns:
+        A report DataFrame containing one row per ablation experiment.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not selected_model:
+        raise ValueError("selected_model is required for ablation training.")
+    if not experiment_configs:
+        raise ValueError("No ablation experiment configs were provided.")
+
+    dry_run = bool(base_train_args.get("dry_run", False))
+    overwrite = bool(base_train_args.get("overwrite", False))
+    rows: list[dict[str, Any]] = []
+
+    for experiment_config in experiment_configs:
+        experiment = str(experiment_config.get("experiment", ""))
+        dataset_yaml = Path(str(experiment_config.get("dataset_yaml", "")))
+        use_online_aug = bool(experiment_config.get("use_online_augmentation", False))
+        run_base_name = _ablation_run_name(experiment=experiment, selected_model=selected_model)
+        run_name = run_base_name if overwrite else _unique_run_name(output_dir, run_base_name)
+        run_dir = output_dir / run_name
+        row = _base_ablation_row(
+            experiment=experiment,
+            dataset_yaml=dataset_yaml,
+            selected_model=selected_model,
+            run_name=run_name,
+            run_dir=run_dir,
+            use_online_augmentation=use_online_aug,
+        )
+
+        try:
+            if not dataset_yaml.exists():
+                raise FileNotFoundError(f"Dataset YAML not found: {dataset_yaml}")
+
+            resolved_data_yaml = _resolve_dataset_yaml_for_ultralytics(dataset_yaml, output_dir)
+            train_args = _build_ablation_train_args(
+                base_train_args=base_train_args,
+                online_aug_args=online_aug_args,
+                offline_aug_args=offline_aug_args,
+                use_online_augmentation=use_online_aug,
+            )
+            row["resolved_data_yaml"] = str(resolved_data_yaml)
+
+            if dry_run:
+                run_dir.mkdir(parents=True, exist_ok=True)
+                row.update(
+                    {
+                        "status": "dry_run",
+                        "notes": "training skipped because dry_run=True",
+                    }
+                )
+            else:
+                train_result = _train_one_candidate(
+                    weights=selected_model,
+                    data_yaml=resolved_data_yaml,
+                    output_dir=output_dir,
+                    run_name=run_name,
+                    train_args=train_args,
+                )
+                actual_run_dir = _resolve_run_dir(train_result, fallback=run_dir)
+                row.update(
+                    {
+                        "status": "trained",
+                        "run_dir": str(actual_run_dir),
+                        "error_message": "",
+                        **extract_training_metrics(actual_run_dir),
+                    }
+                )
+        except Exception as exc:
+            row.update(
+                {
+                    "status": "failed",
+                    "error_message": str(exc),
+                    "notes": "ablation experiment failed; remaining experiments can continue",
+                }
+            )
+            rows.append(row)
+            if not continue_on_error:
+                raise
+            continue
+
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
 def _train_one_candidate(
     weights: str,
     data_yaml: Path,
@@ -207,6 +329,27 @@ def _candidate_run_name(candidate: dict | str) -> str:
     return f"{name}_expD"
 
 
+def _ablation_run_name(experiment: str, selected_model: str) -> str:
+    prefix = ABLATION_RUN_PREFIXES.get(experiment, experiment or "ablation")
+    model_stem = Path(selected_model).stem.replace(".", "_")
+    return f"{prefix}_{model_stem}"
+
+
+def _build_ablation_train_args(
+    base_train_args: dict,
+    online_aug_args: dict,
+    offline_aug_args: dict,
+    use_online_augmentation: bool,
+) -> dict:
+    """Attach online augmentation only for experiments B and D."""
+    train_args = dict(base_train_args)
+    if use_online_augmentation:
+        train_args.update(online_aug_args)
+    else:
+        train_args.update(offline_aug_args)
+    return train_args
+
+
 def _unique_run_name(output_dir: Path, base_name: str) -> str:
     """Return a deterministic suffix when an existing run should be preserved."""
     output_dir = Path(output_dir)
@@ -245,6 +388,40 @@ def _base_candidate_row(
         "status": "not_started",
         "data_yaml": str(data_yaml),
         "resolved_data_yaml": str(resolved_data_yaml),
+        "run_dir": str(run_dir),
+        "precision": None,
+        "recall": None,
+        "map50": None,
+        "map50_95": None,
+        "fitness": None,
+        "training_time": None,
+        "best_weights_path": "",
+        "last_weights_path": "",
+        "model_size_mb": None,
+        "fps": None,
+        "avg_latency_ms": None,
+        "num_benchmark_images": None,
+        "error_message": "",
+        "notes": "",
+    }
+
+
+def _base_ablation_row(
+    experiment: str,
+    dataset_yaml: Path,
+    selected_model: str,
+    run_name: str,
+    run_dir: Path,
+    use_online_augmentation: bool,
+) -> dict[str, Any]:
+    return {
+        "experiment": experiment,
+        "dataset_yaml": str(dataset_yaml),
+        "selected_model": selected_model,
+        "use_online_augmentation": use_online_augmentation,
+        "run_name": run_name,
+        "status": "not_started",
+        "resolved_data_yaml": "",
         "run_dir": str(run_dir),
         "precision": None,
         "recall": None,

@@ -19,6 +19,20 @@ should use for ablation training.
 
 ## Ablation Study
 
+Notebook 06 runs the ablation study after architecture selection is complete.
+It resolves the selected architecture from
+`reports/training/candidate_model_ranking.csv`, or falls back to
+`selected_model` in `configs/training_config.yaml` when needed.
+
+The selected architecture is fixed across all four experiments:
+`exp_A_original_only`, `exp_B_online_aug`, `exp_C_offline_aug`, and
+`exp_D_full_pipeline`. Online augmentation is enabled only for B and D through
+training arguments. Validation metrics decide the best training configuration;
+the test set is not used for ablation selection.
+
+Notebook 07 should use the selected architecture and the top successful
+ablation experiment for final training and final test evaluation.
+
 ## Final Evaluation
 
 ## Export
