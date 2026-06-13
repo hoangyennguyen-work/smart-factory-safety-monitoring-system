@@ -31,3 +31,19 @@ reports/profile/input_summary.csv
 ```
 
 Notebook 02 uses `reports/profile/input_image_profile.csv` to create a balanced train/val/test split by class presence and no-sign status.
+
+## Notebook 02 Split Outputs
+
+Notebook 02 creates the original train/val/test split from valid input images only. It copies files into:
+
+```text
+data/generated/splits_original/
+```
+
+Input images and labels remain unchanged. No-sign images are valid samples and should be distributed across train, validation, and test so each split contains useful negative examples.
+
+The original split is described for Ultralytics training by:
+
+```text
+data_splits_original.yaml
+```

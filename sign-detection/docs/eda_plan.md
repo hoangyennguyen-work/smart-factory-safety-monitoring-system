@@ -16,6 +16,10 @@ Notebook 02 creates the train/val/test split and then verifies split quality. It
 * no-sign image ratio across train, val, and test
 * object counts per split
 * bounding-box size and position distributions per split
+* image resolution and simple brightness/blur indicators per split
+* exact duplicate leakage across split boundaries
+
+Notebook 02 writes split reports under `reports/splits/`, full post-split EDA under `reports/eda/`, and selected figures under `reports/figures/`.
 
 ## Model-Selection Rule
 
