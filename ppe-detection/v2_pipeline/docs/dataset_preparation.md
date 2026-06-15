@@ -80,6 +80,24 @@ The later split notebook should use:
 This keeps validation and test focused on the real factory domain while still
 using open-source data to improve training coverage.
 
+Notebook `03_split_dataset.ipynb` creates this generated split under:
+
+```text
+data/generated/splits/train/
+data/generated/splits/val/
+data/generated/splits/test/
+```
+
+The factory train/validation split is stratified by whether images contain:
+
+- `helmet`
+- `vest`
+- `cleaning_coverall`
+
+If a class or class-combination appears in too few factory images to be present
+in both train and validation, Notebook 03 records a warning rather than hiding
+the imbalance.
+
 ## Generated Data
 
 Generated data belongs under:
