@@ -55,6 +55,20 @@ ppe-detection/**/results/**/*.csv
 ppe-detection/**/results/**/*.png
 ppe-detection/**/results/**/*.jpg
 
+# Sign detection local data and generated outputs
+sign-detection/data/input/images/*
+sign-detection/data/input/labels/*
+sign-detection/data/generated/**
+sign-detection/reports/**
+sign-detection/runs/**
+sign-detection/weights/**
+
+# Keep sign detection placeholders and module instructions
+!sign-detection/data/input/images/.gitkeep
+!sign-detection/data/input/labels/.gitkeep
+!sign-detection/**/.gitkeep
+!sign-detection/AGENTS.md
+
 # OS files
 .DS_Store
 Thumbs.db

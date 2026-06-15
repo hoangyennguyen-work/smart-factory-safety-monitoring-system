@@ -1,0 +1,10 @@
+path: data/generated/experiments/exp_B_online_aug
+train: train/images
+val: val/images
+test: test/images
+nc: 4
+names:
+  0: M014_Helmet
+  1: M015_Vest
+  2: P004_NoThoroughfare
+  3: W011_Slippery
